@@ -11,12 +11,7 @@ import (
 func main() {
 	r := gin.Default()
 
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:4200"},
-		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		AllowCredentials: true,
-	}))
+	r.Use(cors.Default())
 
 	_, handler, err := dependencies.InitializeDependencies()
 	if err != nil {
