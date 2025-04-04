@@ -20,7 +20,7 @@ func NewNotificationController(createUseCase *usecases.CreateNotificationUseCase
 	}
 }
 
-func (c *NotificationController) CreateNotification(ctx *gin.Context) {
+func (c *NotificationController) Execute(ctx *gin.Context) {
 	var notification domain.Notification
 	if err := ctx.ShouldBindJSON(&notification); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})

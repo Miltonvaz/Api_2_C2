@@ -6,23 +6,41 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
-	r := gin.Default()
+	// Canal para capturar señales de interrupción
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
 
+	r := gin.Default()
 	r.Use(cors.Default())
 
-	_, handler, err := dependencies.InitializeDependencies()
+	// Inicializar dependencias (una sola vez)
+	notificationController, deleteNotificationController, getAllNotificationsController, getNotificationByIDController, updateNotificationController, err := dependencies.InitializeDependencies()
 	if err != nil {
 		log.Fatalf("Error inicializando dependencias: %v", err)
-		return
 	}
 
-	routes.SetupNotificationRoutes(r, handler)
+	// Configurar rutas
+	routes.SetupNotificationRoutes(r, notificationController, deleteNotificationController, getAllNotificationsController, getNotificationByIDController, updateNotificationController)
 
-	log.Println("Servidor corriendo en http://localhost:8082")
-	if err := r.Run(":8082"); err != nil {
-		log.Fatalf("Error al iniciar el servidor: %v", err)
-	}
+	// Iniciar servidor en goroutine para no bloquear
+	go func() {
+		log.Println("Servidor corriendo en http://localhost:8083")
+		if err := r.Run(":8083"); err != nil {
+			log.Fatalf("Error al iniciar el servidor: %v", err)
+		}
+	}()
+
+	// Esperar señal de terminación
+	<-signalChannel
+
+	log.Println("Deteniendo servidor...")
+	time.Sleep(2 * time.Second)
+	log.Println("Servidor detenido.")
 }

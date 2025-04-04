@@ -10,19 +10,20 @@ type ServiceNotification struct {
 }
 
 func NewServiceNotification(rabbitPort NotificationPort) *ServiceNotification {
-	return &ServiceNotification{
-		rabbitPort: rabbitPort,
-	}
+	return &ServiceNotification{rabbitPort: rabbitPort}
 }
 
 func (sn *ServiceNotification) NotifyAppointmentCreated(notification entities.Notification) error {
-	log.Println("Notificación...")
+	log.Printf("Notificación recibida: %+v", notification)
 
-	err := sn.rabbitPort.PublishNotification(notification)
-	if err != nil {
-		log.Printf("Error al publicar el evento en RabbitMQ: %v", err)
-		return err
-	}
+	go func() {
+		err := sn.rabbitPort.PublishNotification(notification)
+		if err != nil {
+			log.Printf("Error al publicar en RabbitMQ: %v", err)
+		} else {
+			log.Println("Notificación enviada a RabbitMQ exitosamente")
+		}
+	}()
 
 	return nil
 }
